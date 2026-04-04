@@ -119,7 +119,7 @@ public class CardService {
         int position = card.getPosition();
         UUID columnId = card.getColumn().getId();
         cardRepository.delete(card);
-        cardRepository.decrementPositionsAfter(columnId, position - 1);
+        cardRepository.decrementPositionsAfter(columnId, position);
     }
 
     @Transactional

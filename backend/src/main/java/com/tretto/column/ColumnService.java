@@ -82,7 +82,7 @@ public class ColumnService {
 
         int position = column.getPosition();
         columnRepository.delete(column);
-        columnRepository.decrementPositionsAfter(boardId, position - 1);
+        columnRepository.decrementPositionsAfter(boardId, position);
     }
 
     private BoardColumn findColumnById(UUID columnId) {
