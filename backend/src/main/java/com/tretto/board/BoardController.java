@@ -1,5 +1,6 @@
 package com.tretto.board;
 
+import com.tretto.board.dto.AddMemberRequest;
 import com.tretto.board.dto.BoardDetailResponse;
 import com.tretto.board.dto.BoardRequest;
 import com.tretto.board.dto.BoardSummaryResponse;
@@ -13,7 +14,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -65,12 +65,10 @@ public class BoardController {
     @PostMapping("/{boardId}/members")
     public ResponseEntity<Void> addMember(
             @PathVariable UUID boardId,
-            @RequestBody Map<String, String> body,
+            @Valid @RequestBody AddMemberRequest body,
             @AuthenticationPrincipal User user
     ) {
-        String email = body.get("email");
-        Role role = Role.valueOf(body.getOrDefault("role", "VIEWER").toUpperCase());
-        boardService.addMember(boardId, email, role, user.getId());
+        boardService.addMember(boardId, body.getEmail(), body.getRole(), user.getId());
         return ResponseEntity.noContent().build();
     }
 

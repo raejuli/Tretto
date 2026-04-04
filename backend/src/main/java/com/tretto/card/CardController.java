@@ -1,5 +1,6 @@
 package com.tretto.card;
 
+import com.tretto.card.dto.AddLabelRequest;
 import com.tretto.card.dto.CardMoveRequest;
 import com.tretto.card.dto.CardRequest;
 import com.tretto.card.dto.CardResponse;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -68,11 +68,10 @@ public class CardController {
     @PostMapping("/api/v1/cards/{cardId}/labels")
     public ResponseEntity<Void> addLabel(
             @PathVariable UUID cardId,
-            @RequestBody Map<String, String> body,
+            @Valid @RequestBody AddLabelRequest body,
             @AuthenticationPrincipal User user
     ) {
-        UUID labelId = UUID.fromString(body.get("labelId"));
-        cardService.addLabel(cardId, labelId, user.getId());
+        cardService.addLabel(cardId, body.getLabelId(), user.getId());
         return ResponseEntity.noContent().build();
     }
 

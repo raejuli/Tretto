@@ -17,17 +17,28 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
+    private static final String SEPARATOR = ".";
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.jwt.refresh-token-expiry-days:7}")
     private int refreshTokenExpiryDays;
 
+    /**
+     * Creates a new refresh token. The raw token format is "selector.verifier".
+     * The selector is stored in plain text for fast lookup; the verifier is bcrypt-hashed.
+     */
     @Transactional
-    public String createRefreshToken(User user, String rawToken) {
+    public String createRefreshToken(User user) {
+        String selector = UUID.randomUUID().toString();
+        String verifier = UUID.randomUUID().toString();
+        String rawToken = selector + SEPARATOR + verifier;
+
         RefreshToken token = RefreshToken.builder()
                 .user(user)
-                .tokenHash(passwordEncoder.encode(rawToken))
+                .selector(selector)
+                .tokenHash(passwordEncoder.encode(verifier))
                 .expiresAt(LocalDateTime.now().plusDays(refreshTokenExpiryDays))
                 .revoked(false)
                 .build();
@@ -36,34 +47,40 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public User validateAndRotate(String rawToken, String newRawToken) {
-        List<RefreshToken> activeTokens = refreshTokenRepository.findAll().stream()
-                .filter(t -> !t.isRevoked()
-                        && t.getExpiresAt().isAfter(LocalDateTime.now())
-                        && passwordEncoder.matches(rawToken, t.getTokenHash()))
-                .toList();
+    public User validateAndRotate(String rawToken) {
+        String[] parts = rawToken.split("\\.", 2);
+        if (parts.length != 2) {
+            throw new TrettoException("Invalid refresh token format", HttpStatus.UNAUTHORIZED);
+        }
+        String selector = parts[0];
+        String verifier = parts[1];
 
-        if (activeTokens.isEmpty()) {
+        RefreshToken stored = refreshTokenRepository.findBySelector(selector)
+                .orElseThrow(() -> new TrettoException("Invalid or expired refresh token", HttpStatus.UNAUTHORIZED));
+
+        if (stored.isRevoked() || stored.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new TrettoException("Invalid or expired refresh token", HttpStatus.UNAUTHORIZED);
         }
 
-        RefreshToken found = activeTokens.get(0);
-        found.setRevoked(true);
-        refreshTokenRepository.save(found);
+        if (!passwordEncoder.matches(verifier, stored.getTokenHash())) {
+            // Possible token theft — revoke all tokens for this user
+            refreshTokenRepository.revokeAllByUserId(stored.getUser().getId());
+            throw new TrettoException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+        }
 
-        User user = found.getUser();
-        createRefreshToken(user, newRawToken);
-        return user;
+        stored.setRevoked(true);
+        refreshTokenRepository.save(stored);
+        return stored.getUser();
     }
 
     @Transactional
-    public void revokeForUser(User user, String rawToken) {
-        List<RefreshToken> activeTokens = refreshTokenRepository.findByUserIdAndRevokedFalse(user.getId());
-        activeTokens.stream()
-                .filter(t -> passwordEncoder.matches(rawToken, t.getTokenHash()))
-                .forEach(t -> {
-                    t.setRevoked(true);
-                    refreshTokenRepository.save(t);
-                });
+    public void revokeToken(String rawToken) {
+        String[] parts = rawToken.split("\\.", 2);
+        if (parts.length != 2) return;
+        String selector = parts[0];
+        refreshTokenRepository.findBySelector(selector).ifPresent(t -> {
+            t.setRevoked(true);
+            refreshTokenRepository.save(t);
+        });
     }
 }

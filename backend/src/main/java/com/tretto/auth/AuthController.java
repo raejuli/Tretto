@@ -86,6 +86,7 @@ public class AuthController {
     private void setRefreshCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, token);
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         cookie.setPath(REFRESH_COOKIE_PATH);
         cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setAttribute("SameSite", "Strict");
@@ -95,6 +96,7 @@ public class AuthController {
     private void clearRefreshCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, "");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         cookie.setPath(REFRESH_COOKIE_PATH);
         cookie.setMaxAge(0);
         cookie.setAttribute("SameSite", "Strict");

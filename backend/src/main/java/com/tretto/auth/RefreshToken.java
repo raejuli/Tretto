@@ -23,6 +23,11 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /** Non-secret selector used to look up this token record efficiently. */
+    @Column(nullable = false, unique = true)
+    private String selector;
+
+    /** BCrypt hash of the verifier portion of the raw token. */
     @Column(nullable = false)
     private String tokenHash;
 

@@ -76,6 +76,7 @@ CREATE TABLE card_labels (
 CREATE TABLE refresh_tokens (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    selector   VARCHAR(255) NOT NULL UNIQUE,
     token_hash VARCHAR(255) NOT NULL,
     expires_at TIMESTAMP   NOT NULL,
     revoked    BOOLEAN     NOT NULL DEFAULT FALSE

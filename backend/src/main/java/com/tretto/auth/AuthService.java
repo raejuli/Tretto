@@ -39,8 +39,7 @@ public class AuthService {
         userRepository.save(user);
 
         String accessToken = jwtService.generateAccessToken(user);
-        String rawRefreshToken = jwtService.generateRefreshToken();
-        refreshTokenService.createRefreshToken(user, rawRefreshToken);
+        String rawRefreshToken = refreshTokenService.createRefreshToken(user);
 
         return new AuthResult(buildResponse(user, accessToken), rawRefreshToken);
     }
@@ -59,23 +58,22 @@ public class AuthService {
                 .orElseThrow(() -> new TrettoException("User not found", HttpStatus.NOT_FOUND));
 
         String accessToken = jwtService.generateAccessToken(user);
-        String rawRefreshToken = jwtService.generateRefreshToken();
-        refreshTokenService.createRefreshToken(user, rawRefreshToken);
+        String rawRefreshToken = refreshTokenService.createRefreshToken(user);
 
         return new AuthResult(buildResponse(user, accessToken), rawRefreshToken);
     }
 
     @Transactional
     public AuthResult refresh(String rawRefreshToken) {
-        String newRawRefreshToken = jwtService.generateRefreshToken();
-        User user = refreshTokenService.validateAndRotate(rawRefreshToken, newRawRefreshToken);
+        User user = refreshTokenService.validateAndRotate(rawRefreshToken);
+        String newRawRefreshToken = refreshTokenService.createRefreshToken(user);
         String accessToken = jwtService.generateAccessToken(user);
         return new AuthResult(buildResponse(user, accessToken), newRawRefreshToken);
     }
 
     @Transactional
     public void logout(User user, String rawRefreshToken) {
-        refreshTokenService.revokeForUser(user, rawRefreshToken);
+        refreshTokenService.revokeToken(rawRefreshToken);
     }
 
     private AuthResponse buildResponse(User user, String accessToken) {
