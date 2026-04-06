@@ -62,7 +62,7 @@ public class BoardService {
         boardMemberRepository.save(ownerMember);
 
         log.info("Board {} created by user {}", board.getId(), owner.getId());
-        return toDetailResponse(board);
+        return toDetailResponse(board, owner.getId());
     }
 
     @Transactional(readOnly = true)
@@ -70,7 +70,7 @@ public class BoardService {
         boardAccessEvaluator.requireRole(boardId, userId, Role.VIEWER);
         Board board = boardRepository.findByIdWithFullTree(boardId)
                 .orElseThrow(() -> new EntityNotFoundException("Board not found: " + boardId));
-        return toDetailResponse(board);
+        return toDetailResponse(board, userId);
     }
 
     @Transactional
@@ -80,7 +80,7 @@ public class BoardService {
         if (request.getTitle() != null) board.setTitle(request.getTitle());
         if (request.getDescription() != null) board.setDescription(request.getDescription());
         board = boardRepository.save(board);
-        return toDetailResponse(board);
+        return toDetailResponse(board, userId);
     }
 
     @Transactional
@@ -139,7 +139,7 @@ public class BoardService {
                 .build();
     }
 
-    public BoardDetailResponse toDetailResponse(Board board) {
+    public BoardDetailResponse toDetailResponse(Board board, UUID requestingUserId) {
         List<ColumnResponse> columnResponses = board.getColumns().stream()
                 .map(col -> ColumnResponse.builder()
                         .id(col.getId())
@@ -162,6 +162,12 @@ public class BoardService {
                         .build())
                 .toList();
 
+        Map<UUID, String> roleByUserId = memberInfos.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        BoardDetailResponse.MemberInfo::getUserId,
+                        BoardDetailResponse.MemberInfo::getRole));
+        String myRole = requestingUserId == null ? null : roleByUserId.get(requestingUserId);
+
         return BoardDetailResponse.builder()
                 .id(board.getId())
                 .title(board.getTitle())
@@ -172,6 +178,7 @@ public class BoardService {
                 .archived(board.isArchived())
                 .columns(columnResponses)
                 .members(memberInfos)
+                .myRole(myRole)
                 .build();
     }
 

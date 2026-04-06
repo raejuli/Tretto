@@ -24,6 +24,7 @@ public class BoardDetailResponse {
     private boolean archived;
     private List<ColumnResponse> columns;
     private List<MemberInfo> members;
+    private String myRole;
 
     @Data
     @Builder
