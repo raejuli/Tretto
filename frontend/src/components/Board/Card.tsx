@@ -14,7 +14,7 @@ export function Card({ card, columnId, index }: CardProps) {
   const { state } = useBoard();
   const [showDetail, setShowDetail] = useState(false);
 
-  const canEdit = state.board?.myRole === 'OWNER' || state.board?.myRole === 'EDITOR';
+  const canEdit = state.board?.myRole === 'OWNER' || state.board?.myRole === 'EDITOR' || false;
   const isOverdue = card.dueDate && new Date(card.dueDate) < new Date(new Date().toDateString());
 
   return (
@@ -78,7 +78,7 @@ export function Card({ card, columnId, index }: CardProps) {
           boardId={state.board.id}
           members={state.board.members}
           onClose={() => setShowDetail(false)}
-          canEdit={canEdit ?? false}
+          canEdit={canEdit}
         />
       )}
     </>

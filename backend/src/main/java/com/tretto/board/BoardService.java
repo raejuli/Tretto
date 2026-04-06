@@ -162,12 +162,11 @@ public class BoardService {
                         .build())
                 .toList();
 
-        String myRole = requestingUserId == null ? null :
-                memberInfos.stream()
-                        .filter(m -> m.getUserId().equals(requestingUserId))
-                        .map(BoardDetailResponse.MemberInfo::getRole)
-                        .findFirst()
-                        .orElse(null);
+        Map<UUID, String> roleByUserId = memberInfos.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        BoardDetailResponse.MemberInfo::getUserId,
+                        BoardDetailResponse.MemberInfo::getRole));
+        String myRole = requestingUserId == null ? null : roleByUserId.get(requestingUserId);
 
         return BoardDetailResponse.builder()
                 .id(board.getId())

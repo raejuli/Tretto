@@ -57,15 +57,21 @@ export default function DashboardPage() {
     e.stopPropagation();
     setStarred((prev) => {
       const next = new Set(prev);
-      if (next.has(boardId)) next.delete(boardId); else next.add(boardId);
+      if (next.has(boardId)) {
+        next.delete(boardId);
+      } else {
+        next.add(boardId);
+      }
       saveStarred(next);
       return next;
     });
   };
 
-  const handleDelete = async (e: React.MouseEvent, boardId: string, title: string) => {
+  const ARCHIVE_CONFIRM = 'Archive this board? It will be hidden from your dashboard but can still be viewed in the archived boards section.';
+
+  const handleDelete = async (e: React.MouseEvent, boardId: string) => {
     e.stopPropagation();
-    if (!window.confirm(`Archive board "${title}"? You can still view it but it will be hidden from this list.`)) return;
+    if (!window.confirm(ARCHIVE_CONFIRM)) return;
     await deleteBoard(boardId);
     setBoards((prev) => prev.map((b) => b.id === boardId ? { ...b, archived: true } : b));
   };
@@ -139,7 +145,7 @@ export default function DashboardPage() {
                 {/* Archive button */}
                 {!board.archived && (
                   <button
-                    onClick={(e) => handleDelete(e, board.id, board.title)}
+                    onClick={(e) => handleDelete(e, board.id)}
                     title="Archive board"
                     style={{
                       position: 'absolute', bottom: '8px', right: '8px',

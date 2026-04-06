@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { Column as ColumnType } from '../../types';
 import { Card } from './Card';
@@ -49,7 +49,10 @@ export function Column({ column, index }: ColumnProps) {
     await deleteColumn(column.id);
   };
 
-  const sortedCards = column.cards.slice().sort((a, b) => a.position - b.position);
+  const sortedCards = useMemo(
+    () => column.cards.slice().sort((a, b) => a.position - b.position),
+    [column.cards],
+  );
 
   return (
     <Draggable draggableId={column.id} index={index}>

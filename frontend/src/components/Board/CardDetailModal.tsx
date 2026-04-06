@@ -45,7 +45,7 @@ export function CardDetailModal({ card, columnId, boardId, members, onClose, can
         title: title.trim(),
         description: description.trim() || undefined,
         dueDate: dueDate || null,
-        assigneeId: assigneeId || null,
+        assigneeId: assigneeId === '' ? null : assigneeId,
       } as Parameters<typeof updateCard>[2]);
     } finally {
       setSaving(false);
