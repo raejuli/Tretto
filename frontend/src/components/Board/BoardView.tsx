@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useBoard } from '../../hooks/useBoard';
 import { Column } from './Column';
 import { Button } from '../common/Button';
+import { BoardSearchContext } from '../../pages/BoardPage';
 
 export function BoardView() {
   const { state, moveCard, moveColumn, addColumn } = useBoard();
+  const searchText = useContext(BoardSearchContext);
   const { board } = state;
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -35,6 +37,13 @@ export function BoardView() {
 
   const sortedColumns = board.columns.slice().sort((a, b) => a.position - b.position);
 
+  const filteredColumns = searchText
+    ? sortedColumns.map((col) => ({
+        ...col,
+        cards: col.cards.filter((c) => c.title.toLowerCase().includes(searchText)),
+      }))
+    : sortedColumns;
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="board" type="COLUMN" direction="horizontal">
@@ -44,7 +53,7 @@ export function BoardView() {
             {...provided.droppableProps}
             style={{ display: 'flex', alignItems: 'flex-start', padding: '12px', overflowX: 'auto', minHeight: 'calc(100vh - 120px)' }}
           >
-            {sortedColumns.map((column, index) => (
+            {filteredColumns.map((column, index) => (
               <Column key={column.id} column={column} index={index} />
             ))}
             {provided.placeholder}
@@ -55,7 +64,7 @@ export function BoardView() {
                   autoFocus
                   value={newColumnTitle}
                   onChange={(e) => setNewColumnTitle(e.target.value)}
-                  placeholder="Enter list title\u2026"
+                  placeholder="Enter list title…"
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #dfe1e6', fontSize: '14px', boxSizing: 'border-box' }}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleAddColumn(); }}
                 />
@@ -79,3 +88,4 @@ export function BoardView() {
     </DragDropContext>
   );
 }
+

@@ -10,23 +10,23 @@ export async function createColumn(boardId: string, title: string): Promise<Colu
   return res.json();
 }
 
-export async function updateColumn(boardId: string, columnId: string, data: { title?: string; position?: number }): Promise<Column> {
-  const res = await apiFetch(`/api/v1/boards/${boardId}/columns/${columnId}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
+export async function renameColumn(columnId: string, title: string): Promise<Column> {
+  const res = await apiFetch(`/api/v1/columns/${columnId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ title }),
   });
-  if (!res.ok) throw new Error('Failed to update column');
+  if (!res.ok) throw new Error('Failed to rename column');
   return res.json();
 }
 
-export async function deleteColumn(boardId: string, columnId: string): Promise<void> {
-  const res = await apiFetch(`/api/v1/boards/${boardId}/columns/${columnId}`, { method: 'DELETE' });
+export async function deleteColumn(columnId: string): Promise<void> {
+  const res = await apiFetch(`/api/v1/columns/${columnId}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete column');
 }
 
 export async function moveColumn(boardId: string, columnId: string, position: number): Promise<Column> {
-  const res = await apiFetch(`/api/v1/boards/${boardId}/columns/${columnId}/move`, {
-    method: 'POST',
+  const res = await apiFetch(`/api/v1/columns/${columnId}/move`, {
+    method: 'PATCH',
     body: JSON.stringify({ position }),
   });
   if (!res.ok) throw new Error('Failed to move column');

@@ -24,7 +24,7 @@ export async function createBoard(title: string, description: string): Promise<B
 
 export async function updateBoard(boardId: string, data: { title?: string; description?: string }): Promise<BoardSummary> {
   const res = await apiFetch(`/api/v1/boards/${boardId}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to update board');
